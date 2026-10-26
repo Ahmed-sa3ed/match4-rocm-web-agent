@@ -1,0 +1,13 @@
+*
+!*.py
+!requirements*.txt
+!constraints*.txt
+!README.md
+!Dockerfile
+!test_site/
+!test_site/**
+!agent_suite.json
+!scripts/
+!scripts/**
+!docs/
+!docs/**

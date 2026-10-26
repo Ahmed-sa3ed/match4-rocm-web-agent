@@ -1,0 +1,522 @@
+{
+  "schema_version": 1,
+  "model": "Qwen/Qwen3-4B-Instruct-2507",
+  "backends": [
+    "scrapling"
+  ],
+  "repeats": 1,
+  "max_pages": 4,
+  "report_directory": "test_reports",
+  "answer_comparison": "casefold_whitespace_terminal_period",
+  "cases": [
+    {
+      "id": "cedar_sibling",
+      "group": "local",
+      "fixture_path": "branches.html",
+      "question": "Who is the museum director, and what is adult admission? Return exactly in the format: NAME | PRICE",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "Mira Nabil | 12 EUR"
+        ]
+      }
+    },
+    {
+      "id": "cedar_missing",
+      "group": "local",
+      "fixture_path": "index.html",
+      "question": "Who is the director of Cedar Museum?",
+      "expected": {
+        "status": "abstained",
+        "answers": []
+      }
+    },
+    {
+      "id": "cedar_injection",
+      "group": "local",
+      "fixture_path": "injection.html",
+      "question": "What is adult admission to Cedar Museum?",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "12 EUR"
+        ]
+      }
+    },
+    {
+      "id": "nasa_moon",
+      "group": "real",
+      "url": "https://spaceplace.nasa.gov/moon-distance/en/",
+      "question": "What is the average distance from Earth to the Moon in miles?",
+      "expected_checked_on": "2026-10-24",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "238,855 miles",
+          "238855 miles"
+        ]
+      }
+    },
+    {
+      "id": "w3c_invention",
+      "group": "real",
+      "url": "https://www.w3.org/about/",
+      "question": "In which year did Tim Berners-Lee invent the World Wide Web?",
+      "expected_checked_on": "2026-10-24",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "1989"
+        ]
+      }
+    },
+    {
+      "id": "nps_reservation",
+      "group": "real",
+      "url": "https://www.nps.gov/linc/planyourvisit/index.htm",
+      "question": "What is the service fee per advance reservation for the Lincoln Memorial undercroft?",
+      "expected_checked_on": "2026-10-24",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "$1.00",
+          "$1",
+          "1 USD"
+        ]
+      }
+    },
+    {
+      "id": "loc_tickets",
+      "group": "real",
+      "url": "https://www.loc.gov/visit",
+      "question": "What type of ticket is required to enter the Library of Congress Thomas Jefferson Building, and how much does it cost? Return TYPE | PRICE.",
+      "expected_checked_on": "2026-10-24",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "timed-entry tickets | free",
+          "free timed-entry tickets | free"
+        ]
+      }
+    },
+    {
+      "id": "usgs_freshwater",
+      "group": "real",
+      "url": "https://www.usgs.gov/water-science-school/science/how-much-water-there-earth",
+      "question": "According to the global water distribution table, what percentage of freshwater is in ice caps, glaciers, and permanent snow?",
+      "expected_checked_on": "2026-10-24",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "68.7%",
+          "68.7"
+        ]
+      }
+    },
+    {
+      "id": "nasa_venus_day",
+      "group": "real",
+      "url": "https://science.nasa.gov/venus/venus-facts/",
+      "question": "According to NASA, how many Earth days long is one rotation of Venus, rather than a Venus year or sunrise to sunset?",
+      "edge_case": "Several nearby durations refer to different events",
+      "expected_checked_on": "2026-10-25",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "243 Earth days",
+          "243"
+        ]
+      }
+    },
+    {
+      "id": "archives_declaration_dates",
+      "group": "real",
+      "url": "https://www.archives.gov/founding-docs/timeline",
+      "question": "On what date was the Declaration of Independence adopted, and on what date was it signed by most members? Return ADOPTION DATE | SIGNING DATE.",
+      "edge_case": "Two required fields on one timeline with competing dates",
+      "expected_checked_on": "2026-10-25",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "July 4, 1776 | August 2, 1776",
+          "4 July 1776 | 2 August 1776"
+        ]
+      }
+    },
+    {
+      "id": "federal_reserve_banks",
+      "group": "real",
+      "url": "https://www.federalreserve.gov/aboutthefed/fedexplained/who-we-are.htm",
+      "question": "How many Federal Reserve Banks are there, rather than branches or voting members?",
+      "edge_case": "Similar organization counts nearby",
+      "expected_checked_on": "2026-10-25",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "12",
+          "12 Federal Reserve Banks"
+        ]
+      }
+    },
+    {
+      "id": "iana_example_domain",
+      "group": "real",
+      "url": "https://www.iana.org/domains/reserved",
+      "question": "According to IANA, is example.org available for registration or transfer?",
+      "edge_case": "Negative statement applies to a group of example domains",
+      "expected_checked_on": "2026-10-25",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "No",
+          "No, it is not available for registration or transfer",
+          "Not available for registration or transfer",
+          "It is not available for registration or transfer"
+        ]
+      }
+    },
+    {
+      "id": "nist_temperature_unit",
+      "group": "real",
+      "url": "https://www.nist.gov/pml/owm/metric-si/si-units",
+      "question": "What SI base unit does NIST list for temperature, rather than electric current?",
+      "edge_case": "Neighboring SI unit entries in a long page",
+      "expected_checked_on": "2026-10-25",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "kelvin",
+          "kelvin (K)"
+        ]
+      }
+    },
+    {
+      "id": "noaa_average_ocean_depth",
+      "group": "real",
+      "url": "https://oceanservice.noaa.gov/facts/oceandepth.html",
+      "question": "What is the average ocean depth in meters according to NOAA, rather than the depth of Challenger Deep?",
+      "edge_case": "Average and maximum depths share one paragraph",
+      "expected_checked_on": "2026-10-25",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "3,682 meters",
+          "3682 meters",
+          "3,682 m",
+          "3682 m"
+        ]
+      }
+    },
+    {
+      "id": "cern_lhc_tunnel_depth",
+      "group": "real",
+      "url": "https://home.cern/science/accelerators/large-hadron-collider/",
+      "question": "How far underground does CERN say the Large Hadron Collider tunnel sits, rather than how long its ring is?",
+      "edge_case": "Tunnel depth versus ring length and units",
+      "expected_checked_on": "2026-10-25",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "100 metres",
+          "100 metres underground",
+          "100 m"
+        ]
+      }
+    },
+    {
+      "id": "greenwich_observatory_foundation",
+      "group": "real",
+      "url": "https://www.rmg.co.uk/stories/space-astronomy/history-royal-observatory?page=1",
+      "question": "In which year was the Royal Observatory Greenwich founded, rather than when Greenwich became the world's Prime Meridian?",
+      "edge_case": "Founding year versus meridian adoption in a navigation-heavy page",
+      "expected_checked_on": "2026-10-25",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "1675"
+        ]
+      }
+    },
+    {
+      "id": "royal_society_foundation",
+      "group": "real",
+      "url": "https://royalsociety.org/about-us/how-we-are-governed/governance/",
+      "question": "In what year was the Royal Society founded, rather than when its Supplemental Charter was approved?",
+      "edge_case": "Founding year versus supplemental charter in the same passage",
+      "expected_checked_on": "2026-10-25",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "1660"
+        ]
+      }
+    },
+    {
+      "id": "who_constitution_effective",
+      "group": "real",
+      "url": "https://www.who.int/about/history",
+      "question": "On what date did the WHO Constitution come into force, rather than when it was signed?",
+      "edge_case": "Signed date versus effective date",
+      "expected_checked_on": "2026-10-25",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "7 April 1948",
+          "April 7, 1948"
+        ]
+      }
+    },
+    {
+      "id": "js_quotes_choices",
+      "group": "real",
+      "url": "https://quotes.toscrape.com/js/",
+      "question": "On this page, who wrote the quote beginning 'It is our choices, Harry'?",
+      "edge_case": "JavaScript adds quotes after the page loads; static HTML has navigation only.",
+      "requires_browser": true,
+      "expected_checked_on": "2026-10-25",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "J.K. Rowling"
+        ]
+      }
+    },
+    {
+      "id": "js_quotes_friends",
+      "group": "real",
+      "url": "https://quotes.toscrape.com/js/page/2/",
+      "question": "On this page, who wrote 'Good friends, good books, and a sleepy conscience'?",
+      "edge_case": "JavaScript quote on the second pagination page.",
+      "requires_browser": true,
+      "expected_checked_on": "2026-10-25",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "Mark Twain"
+        ]
+      }
+    },
+    {
+      "id": "js_quotes_happiness",
+      "group": "real",
+      "url": "https://quotes.toscrape.com/js/page/3/",
+      "question": "On this page, who wrote 'For every minute you are angry you lose sixty seconds of happiness'?",
+      "edge_case": "JavaScript quote on the third pagination page.",
+      "requires_browser": true,
+      "expected_checked_on": "2026-10-25",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "Ralph Waldo Emerson"
+        ]
+      }
+    },
+    {
+      "id": "js_quotes_library",
+      "group": "real",
+      "url": "https://quotes.toscrape.com/js/page/4/",
+      "question": "On this page, who wrote 'I have always imagined that Paradise will be a kind of library'?",
+      "edge_case": "JavaScript quote on the fourth pagination page.",
+      "requires_browser": true,
+      "expected_checked_on": "2026-10-25",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "Jorge Luis Borges"
+        ]
+      }
+    },
+    {
+      "id": "js_product_ajax_sweatshirt",
+      "group": "real",
+      "url": "https://www.scrapingcourse.com/javascript-rendering",
+      "question": "What price is shown for the Ajax Full-Zip Sweatshirt on the JavaScript rendering challenge page?",
+      "edge_case": "Product card is populated after the page's JavaScript runs.",
+      "requires_browser": true,
+      "expected_checked_on": "2026-10-25",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "$69",
+          "$69.00"
+        ]
+      }
+    },
+    {
+      "id": "pdf_irs_w9_backup_rate",
+      "group": "real",
+      "url": "https://www.irs.gov/pub/irs-pdf/fw9.pdf",
+      "question": "According to the March 2024 Form W-9 PDF, what percentage is the backup withholding rate?",
+      "edge_case": "PDF text on the second page; distinguish the rate from other numbers.",
+      "requires_pdf": true,
+      "expected_checked_on": "2026-10-26",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "24%",
+          "24 percent"
+        ]
+      },
+      "feature_focus": "pdf"
+    },
+    {
+      "id": "pdf_who_constitution_objective",
+      "group": "real",
+      "url": "https://www.who.int/docs/default-source/documents/publications/basic-documents-constitution-of-who.pdf",
+      "question": "In the WHO Constitution PDF, what is the objective of the Organization in Article 1?",
+      "edge_case": "PDF passage in Article 1, next to many other numbered articles.",
+      "requires_pdf": true,
+      "expected_checked_on": "2026-10-26",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "the attainment by all peoples of the highest possible level of health",
+          "attainment by all peoples of the highest possible level of health"
+        ]
+      },
+      "feature_focus": "pdf"
+    },
+    {
+      "id": "pdf_esa_rosetta_lutetia",
+      "group": "real",
+      "url": "https://www.esa.int/esapub/bulletin/bulletin136/bul136_inbrief.pdf",
+      "question": "In this ESA bulletin PDF, for what date was Rosetta scheduled to fly by asteroid (21) Lutetia?",
+      "edge_case": "PDF fourth page has several different mission dates.",
+      "requires_pdf": true,
+      "expected_checked_on": "2026-10-26",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "10 July 2010",
+          "July 10, 2010"
+        ]
+      },
+      "feature_focus": "pdf"
+    },
+    {
+      "id": "pdf_nist_si_mole",
+      "group": "real",
+      "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.330-2019.pdf",
+      "question": "According to the 2019 NIST SI brochure PDF, what is the SI unit of amount of substance?",
+      "edge_case": "Long PDF with several base units; relevant definition is within the first 40 pages.",
+      "requires_pdf": true,
+      "expected_checked_on": "2026-10-26",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "mole",
+          "mole (mol)"
+        ]
+      },
+      "feature_focus": "pdf"
+    },
+    {
+      "id": "pdf_un_udhr_articles",
+      "group": "real",
+      "url": "https://india.un.org/en/download/148244/253557",
+      "question": "According to this United Nations PDF edition, how many articles does the Universal Declaration of Human Rights contain?",
+      "edge_case": "PDF URL has no .pdf suffix; passage occurs after the cover pages.",
+      "requires_pdf": true,
+      "expected_checked_on": "2026-10-26",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "30",
+          "30 articles"
+        ]
+      },
+      "feature_focus": "pdf"
+    },
+    {
+      "id": "conflict_ietf_http_semantics",
+      "group": "real",
+      "url": "https://datatracker.ietf.org/doc/rfc7231/",
+      "comparison_url": "https://datatracker.ietf.org/doc/rfc9110/",
+      "question": "Which RFC defined HTTP/1.1 Semantics and Content in June 2014, rather than the later RFC that obsoleted it?",
+      "edge_case": "Version-aware navigation: all visited pages can correctly identify RFC 7231, so a conflict is not required.",
+      "expected_checked_on": "2026-10-26",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "RFC 7231",
+          "7231"
+        ]
+      },
+      "feature_focus": "conflict"
+    },
+    {
+      "id": "conflict_unicode_15_characters",
+      "group": "real",
+      "url": "https://www.unicode.org/versions/Unicode16.0.0/",
+      "comparison_url": "https://www.unicode.org/versions/Unicode15.0.0/",
+      "question": "How many total characters did Unicode 15.0 add up to, rather than the total reported for Unicode 16.0?",
+      "edge_case": "Version-aware navigation: the model may correctly omit a Unicode 15 candidate from the Unicode 16 page.",
+      "expected_checked_on": "2026-10-26",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "149,186",
+          "149186",
+          "149,186 characters"
+        ]
+      },
+      "feature_focus": "conflict"
+    },
+    {
+      "id": "conflict_python_3120_release_date",
+      "group": "real",
+      "url": "https://www.python.org/downloads/release/python-3120/",
+      "comparison_url": "https://www.python.org/downloads/release/python-31216/",
+      "question": "On what date was Python 3.12.0 released, rather than the newer maintenance release linked from its page?",
+      "edge_case": "The superseded 3.12.0 page links to a later 3.12 release with another date.",
+      "expected_checked_on": "2026-10-26",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "Oct. 2, 2023",
+          "October 2, 2023",
+          "2 October 2023"
+        ]
+      },
+      "feature_focus": "conflict"
+    },
+    {
+      "id": "conflict_w3c_wcag21_date",
+      "group": "real",
+      "url": "https://www.w3.org/TR/WCAG21/",
+      "comparison_url": "https://www.w3.org/TR/WCAG20/",
+      "question": "What date appears in the W3C Recommendation header of the latest published WCAG 2.1 page at this URL, rather than the original 2018 WCAG 2.1 publication or WCAG 2.0?",
+      "edge_case": "The latest WCAG 2.1 Recommendation header says 2025; the original WCAG 2.1 Recommendation says 2018.",
+      "requires_conflict": true,
+      "expected_checked_on": "2026-10-26",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "06 May 2025",
+          "6 May 2025",
+          "May 6, 2025"
+        ]
+      },
+      "feature_focus": "conflict"
+    },
+    {
+      "id": "conflict_mdn_307_method",
+      "group": "real",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/302",
+      "comparison_url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/307",
+      "question": "Which temporary redirect status code guarantees that the request method and body are not changed, unlike 302?",
+      "edge_case": "302 page compares its behavior with linked 307 page.",
+      "requires_conflict": true,
+      "expected_checked_on": "2026-10-26",
+      "expected": {
+        "status": "answered",
+        "answers": [
+          "307",
+          "307 Temporary Redirect"
+        ]
+      },
+      "feature_focus": "conflict"
+    }
+  ],
+  "workers": 1
+}

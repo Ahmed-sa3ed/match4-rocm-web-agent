@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.env.*
+!.env.example
+hf-cache/
+models/
+output/
+test_reports/
+*.log
+*.zip
+build/
+dist/
+*.egg-info/

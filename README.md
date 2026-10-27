@@ -37,54 +37,80 @@ Python controls parsing, navigation limits and passage matching. The local LLM p
 
 ## AMD notebook setup
 
-Use Linux with an AMD GPU and ROCm PyTorch. The original checkpoint used Python 3.14.4, PyTorch `2.13.0+rocm10.0.0`, and an MI300X VF with approximately 47 GiB VRAM.
+For Jupyter, copy each fenced cell separately. `!` runs a shell command, `%cd` changes the notebook directory, and Python assignments set environment variables that `!` commands inherit. The example below uses the AMD notebook's `/persistent` directory; use `/workspace` on `rgapi-hackathon-*` sessions.
 
-Clone into persistent storage: `/persistent` for `jupyter-hack-*` sessions, or `/workspace` for `rgapi-hackathon-*` sessions, according to the supplied event guidance. The approximately 25 GB persistent quota includes model and browser caches.
+If you already cloned the repository, skip the clone cell and use `%cd` with your existing folder. The commands below are for a new checkout:
 
-```bash
-git clone https://github.com/Ahmed-sa3ed/match4-rocm-web-agent.git
-cd match4-rocm-web-agent
-python3 -c 'import torch; print(torch.__version__, torch.version.hip); assert torch.cuda.is_available()'
-python3 -c 'import torch; print("torch==" + torch.__version__)' > constraints-torch.txt
-python3 -m pip install -c constraints-torch.txt -r requirements.txt
-scrapling install
+```python
+%cd /persistent
+!git clone https://github.com/Ahmed-sa3ed/match4-rocm-web-agent.git
+%cd /persistent/match4-rocm-web-agent
 ```
 
-### Hosted notebook browser compatibility
+Check the notebook GPU and create a constraint file to preserve the preinstalled ROCm PyTorch:
 
-If Chromium aborts with `Did not receive ping from zygote child` followed by GPU-process launch failures, enable the opt-in setting in the notebook before running the agent:
+```python
+!python3 -c 'import torch; print(torch.__version__, torch.version.hip, torch.cuda.get_device_name(0)); assert torch.cuda.is_available()'
+!python3 -c 'import torch; print("torch==" + torch.__version__)' > constraints-torch.txt
+!python3 -m pip install -c constraints-torch.txt -r requirements.txt
+```
+
+Run the application checks without a model or browser:
+
+```python
+!python3 backend_selfcheck.py
+!python3 app_selfcheck.py
+!python3 feature_selfcheck.py
+!python3 adaptive_selfcheck.py
+!python3 conflict_selfcheck.py
+!python3 pdf_selfcheck.py
+!python3 run_agent_suite.py --dry-run
+```
+
+Browser rendering needs a Chromium installation and Ubuntu system libraries. If not already present, `!scrapling install` normally installs them, but it requires network access to Ubuntu APT mirrors. The hosted notebook we tested blocked those mirrors; installing only the browser download may leave missing libraries. Do not interpret the offline browser checks as proof Chromium starts.
+
+On the tested AMD notebook, Chromium needed this setting to start its child processes. Set it in a Python cell before the browser check and before running the agent; notebook `!` commands inherit it:
 
 ```python
 import os
 os.environ["MATCH4_BROWSER_NO_ZYGOTE"] = "1"
 ```
 
-For a terminal, use `export MATCH4_BROWSER_NO_ZYGOTE=1`. Set it again after restarting the notebook kernel, or pass it into the container with `-e MATCH4_BROWSER_NO_ZYGOTE=1`.
-
-This passes `--no-zygote` through Scrapling so Chromium starts child processes directly. It does not alter ROCm, PyTorch, or the competition's VRAM enforcement. Leave it unset on environments that launch normally. Chromium requires sandboxing to be disabled for this flag; the failing notebook launch already had `--no-sandbox`, and this option adds no further sandbox flags.
-
-A user-run local JavaScript rendering test passed in the AMD notebook with this flag on October 27, 2026. This verifies browser startup and DOM rendering, not live-site accuracy or vLLM inference.
-
-### Local model installation
-
-Install vLLM compatible with the exact Python, PyTorch and ROCm environment. **Do not blindly install a generic vLLM wheel over the notebook's torch build.** The [official vLLM guide](https://docs.vllm.ai/en/stable/getting_started/installation/gpu/) requires a source build when retaining a different PyTorch/ROCm stack.
-
-`scripts/build_vllm.sh` is an unverified source-build recipe that preserves torch through pip constraints. It requires an explicit `VLLM_REF` selected and tested for the target environment, plus that revision's native prerequisites. No compatible revision is claimed yet. If vLLM is already installed, verify it:
-
-```bash
-python3 -c 'import torch, vllm; assert torch.version.hip; print(torch.__version__, vllm.__version__)'
+```python
+!python3 browser_livecheck.py
 ```
 
-Start the model once and keep this terminal running:
+The real browser test passed on the AMD notebook on October 27, 2026 with this option. It executes local JavaScript through Scrapling, but does not validate public sites. Other environments can omit the variable. The notebook's Chromium already ran with `--no-sandbox`; the setting adds `--no-zygote` only.
+
+### Local model prerequisite
+
+Full agent tests require a resident vLLM server. The tested Python 3.14.4 / ROCm PyTorch 2.13 notebook does **not** have vLLM. A source checkout dry run failed because vLLM pinned `amd-quark==0.12.post1`, whose published package excludes Python 3.14. The provided `scripts/build_vllm.sh` is an experimental recipe, not a validated install path for this notebook. It must not be run blindly: it has not resolved this dependency conflict or the hosted compiler layout (`ROCM_HOME=/opt/vram-enforcer`). Installing a generic vLLM wheel may replace the notebook's ROCm PyTorch build. See the [official vLLM ROCm installation guide](https://docs.vllm.ai/en/stable/getting_started/installation/gpu/).
+
+Once a compatible local vLLM installation is **actually working** on the same Python environment, verify it:
+
+```python
+!python3 -c 'import torch, vllm; assert torch.version.hip; print(torch.__version__, vllm.__version__)'
+```
+
+Start the server in a separate Jupyter **Terminal** and leave it running. These are terminal commands, so do not add notebook `!` prefixes:
 
 ```bash
+cd /persistent/match4-rocm-web-agent
 export HF_HOME="$PWD/hf-cache"
+export MATCH4_BROWSER_NO_ZYGOTE=1
 python3 serve.py
 ```
 
-Wait for `Local vLLM is ready`. First startup downloads missing model weights. `MODEL_ID` may point to predownloaded weights; the served name remains `Qwen/Qwen3-4B-Instruct-2507`.
+Wait for `Local vLLM is ready`, then return to the notebook and run the local model and full suite:
 
-The server binds to loopback, uses BF16, a 32,768-token context, up to two sequences and a 70% GPU memory target. These are starting settings for the original MI300X environment, not measured VRAM guarantees or validated Radeon settings.
+```python
+!python3 local_agent.py models
+!python3 local_agent.py smoke --model Qwen/Qwen3-4B-Instruct-2507
+!python3 run_agent_suite.py --only local --workers 1
+!python3 run_agent_suite.py --workers 1
+```
+
+The full suite makes public network requests; those sites may change or be blocked by the notebook network. Reports are saved in `test_reports/`. These commands test a running agent only after vLLM is installed and ready. The server uses BF16, a 32,768-token context, up to two sequences, and a 70% GPU memory target. These settings and the competition's final Match 4 contract remain unvalidated.
 
 ## Ask a question
 

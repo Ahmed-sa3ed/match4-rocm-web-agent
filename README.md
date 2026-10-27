@@ -82,6 +82,10 @@ os.environ["MATCH4_BROWSER_NO_ZYGOTE"] = "1"
 
 The real browser test passed on the AMD notebook on October 27, 2026 with this option. It executes local JavaScript through Scrapling, but does not validate public sites. Other environments can omit the variable. The notebook's Chromium already ran with `--no-sandbox`; the setting adds `--no-zygote` only.
 
+### Notebook model evaluation with Transformers
+
+The tested Python 3.14 notebook cannot resolve the current vLLM ROCm dependencies. To run the complete agent with the same Qwen model now, follow [the local Transformers server notebook guide](docs/NOTEBOOK_TRANSFORMERS.md). This development route does not validate vLLM or the final container.
+
 ### Local model prerequisite
 
 Full agent tests require a resident vLLM server. The tested Python 3.14.4 / ROCm PyTorch 2.13 notebook does **not** have vLLM. A source checkout dry run failed because vLLM pinned `amd-quark==0.12.post1`, whose published package excludes Python 3.14. The provided `scripts/build_vllm.sh` is an experimental recipe, not a validated install path for this notebook. It must not be run blindly: it has not resolved this dependency conflict or the hosted compiler layout (`ROCM_HOME=/opt/vram-enforcer`). Installing a generic vLLM wheel may replace the notebook's ROCm PyTorch build. See the [official vLLM ROCm installation guide](https://docs.vllm.ai/en/stable/getting_started/installation/gpu/).

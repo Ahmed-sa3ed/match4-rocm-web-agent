@@ -68,7 +68,8 @@ def handler_for(backend):
 
         def do_GET(self):
             if self.path == "/health":
-                self.respond(200, {"status": "ok"})
+                self.respond(200, {"status": "ok", "backend": "match4-checkpoint5-transformers",
+                                   "model": DEFAULT_MODEL, "pid": os.getpid()})
             elif self.path == "/v1/models":
                 self.respond(200, {"data": [{"id": DEFAULT_MODEL, "object": "model"}]})
             else:

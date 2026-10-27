@@ -32,7 +32,14 @@ class LocalModel:
                 "model": self.slug, "messages": messages,
                 "temperature": 0, "max_tokens": 128, "stream": False,
             })
-            response.raise_for_status()
+            if response.is_error:
+                try:
+                    detail = response.json().get("error", response.text)
+                except ValueError:
+                    detail = response.text
+                raise RuntimeError(
+                    f"Local model server returned HTTP {response.status_code}: {detail}"
+                )
             choice = response.json()["choices"][0]
             if choice.get("finish_reason") != "stop":
                 raise ValueError("Local model did not finish its response cleanly.")

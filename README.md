@@ -83,13 +83,17 @@ Check readiness in a new cell; repeat while weights load:
 import urllib.request
 print("Server exit code:", server.poll())
 try:
-    print("Health:", urllib.request.urlopen("http://127.0.0.1:8000/health", timeout=3).status)
+    import json
+    health = json.load(urllib.request.urlopen("http://127.0.0.1:8000/health", timeout=3))
+    print("Health:", health)
+    assert health["backend"] == "match4-checkpoint5-transformers"
+    assert health["pid"] == server.pid, "Port 8000 belongs to an older server process"
 except Exception as error:
     print("Not ready:", error)
 print((project / "model-server.log").read_text()[-4000:])
 ```
 
-When health is `200`, test the model, then local and public cases:
+When health identifies `match4-checkpoint5-transformers` and its PID matches the new server, test the model, then local and public cases. If the PID differs, stop the older process and start `serve.py` again. If a request fails, the client now shows the server error detail; do not run the full suite until the smoke case succeeds:
 
 ```python
 !python3 local_agent.py models

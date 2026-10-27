@@ -27,10 +27,18 @@ try:
         answer = LocalModel().generate([{"role": "user", "content": "hello"}])
         assert answer == '{"answer":"12 EUR"}'
         with httpx.Client(trust_env=False) as client:
-            assert client.get(url + "/health").status_code == 200
+            health = client.get(url + "/health").json()
+            assert health["backend"] == "match4-checkpoint5-transformers"
+            assert health["model"] == DEFAULT_MODEL
             assert client.post(url + "/v1/chat/completions", json={
                 "model": "unknown", "messages": [], "stream": False
             }).status_code == 400
+            try:
+                LocalModel("unknown").generate([{"role": "user", "content": "hello"}])
+            except RuntimeError as exc:
+                assert "Unsupported model or streaming request" in str(exc)
+            else:
+                raise AssertionError("Expected server error to reach the client")
     print("PASS: local Transformers HTTP API works with the agent client")
 finally:
     server.shutdown()

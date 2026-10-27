@@ -37,8 +37,8 @@ class ModelBackend:
             and isinstance(item.get("content"), str) for item in messages
         ):
             raise ValueError("messages must contain system/user/assistant text turns")
-        if type(max_tokens) is not int or not 1 <= max_tokens <= 128:
-            raise ValueError("max_tokens must be an integer between 1 and 128")
+        if type(max_tokens) is not int or not 1 <= max_tokens <= 512:
+            raise ValueError("max_tokens must be an integer between 1 and 512")
         with self.lock, self.torch.inference_mode():
             prompt = self.tokenizer.apply_chat_template(
                 messages, tokenize=False, add_generation_prompt=True,

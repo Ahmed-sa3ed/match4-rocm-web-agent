@@ -13,7 +13,7 @@ from serve import handler_for
 class Backend:
     def complete(self, messages, max_tokens):
         assert messages == [{"role": "user", "content": "hello"}]
-        assert max_tokens == 128
+        assert max_tokens == 256
         return '{"answer":"12 EUR"}', "stop", 12, 8
 
 

@@ -36,7 +36,7 @@ class LocalModel:
         with httpx.Client(timeout=120, trust_env=False) as client:
             response = client.post(self.url + "/chat/completions", json={
                 "model": self.slug, "messages": messages,
-                "temperature": 0, "max_tokens": 128, "stream": False,
+                "temperature": 0, "max_tokens": 256, "stream": False,
             })
             if response.is_error:
                 try:

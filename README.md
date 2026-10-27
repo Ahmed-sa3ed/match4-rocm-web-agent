@@ -50,6 +50,23 @@ python3 -m pip install -c constraints-torch.txt -r requirements.txt
 scrapling install
 ```
 
+### Hosted notebook browser compatibility
+
+If Chromium aborts with `Did not receive ping from zygote child` followed by GPU-process launch failures, enable the opt-in setting in the notebook before running the agent:
+
+```python
+import os
+os.environ["MATCH4_BROWSER_NO_ZYGOTE"] = "1"
+```
+
+For a terminal, use `export MATCH4_BROWSER_NO_ZYGOTE=1`. Set it again after restarting the notebook kernel, or pass it into the container with `-e MATCH4_BROWSER_NO_ZYGOTE=1`.
+
+This passes `--no-zygote` through Scrapling so Chromium starts child processes directly. It does not alter ROCm, PyTorch, or the competition's VRAM enforcement. Leave it unset on environments that launch normally. Chromium requires sandboxing to be disabled for this flag; the failing notebook launch already had `--no-sandbox`, and this option adds no further sandbox flags.
+
+A user-run local JavaScript rendering test passed in the AMD notebook with this flag on October 27, 2026. This verifies browser startup and DOM rendering, not live-site accuracy or vLLM inference.
+
+### Local model installation
+
 Install vLLM compatible with the exact Python, PyTorch and ROCm environment. **Do not blindly install a generic vLLM wheel over the notebook's torch build.** The [official vLLM guide](https://docs.vllm.ai/en/stable/getting_started/installation/gpu/) requires a source build when retaining a different PyTorch/ROCm stack.
 
 `scripts/build_vllm.sh` is an unverified source-build recipe that preserves torch through pip constraints. It requires an explicit `VLLM_REF` selected and tested for the target environment, plus that revision's native prerequisites. No compatible revision is claimed yet. If vLLM is already installed, verify it:

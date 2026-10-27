@@ -1,6 +1,7 @@
 """Offline regression checks for adaptive browser retrieval."""
 import io
 import json
+import os
 from contextlib import redirect_stdout
 from unittest.mock import patch
 from types import SimpleNamespace, ModuleType
@@ -140,10 +141,15 @@ sync_api = ModuleType("patchright.sync_api")
 sync_api.TimeoutError = TimeoutError
 with patch.dict(sys.modules, {"scrapling": scrapling, "scrapling.fetchers": fetchers,
                               "patchright": patchright, "patchright.sync_api": sync_api}):
-    browser_page = render_page(url, len(static["text"]))
+    for setting, expected_flags in (("0", None), ("1", ["--no-zygote"])):
+        with patch.dict(os.environ, {"MATCH4_BROWSER_NO_ZYGOTE": setting}), \
+             patch.object(fetchers.StealthyFetcher, "fetch", wraps=fake_browser_fetch) as launch:
+            browser_page = render_page(url, len(static["text"]))
+        assert launch.call_args.kwargs.get("extra_flags") == expected_flags
 assert browser_page["url"] == "https://example.org/current"
 assert "Adult admission: 12 EUR." in browser_page["text"]
 print("PASS: browser adapter parses final DOM and redirected URL")
+print("PASS: notebook compatibility flag is opt-in and forwarded to Scrapling")
 
 
 class TwoFieldModel:

@@ -1,4 +1,5 @@
 """Bounded Scrapling rendering for sparse script-driven HTML pages."""
+import os
 from urllib.parse import urlsplit
 
 from retrieval import UnsupportedContentTypeError, parse_page
@@ -28,9 +29,14 @@ def render_page(url, static_length):
         except BrowserTimeout:
             pass
 
+    # Some hosted containers cannot start Chromium through its zygote process.
+    launch_options = {}
+    if os.environ.get("MATCH4_BROWSER_NO_ZYGOTE") == "1":
+        launch_options["extra_flags"] = ["--no-zygote"]
+
     try:
         response = StealthyFetcher.fetch(
-            url, timeout=12000, page_action=wait_for_content,
+            url, timeout=12000, page_action=wait_for_content, **launch_options,
         )
     except Exception as exc:
         raise BrowserRenderError(str(exc)) from exc

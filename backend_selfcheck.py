@@ -38,3 +38,21 @@ with patch('decision.httpx.Client', side_effect=lambda **kw: real_client(transpo
 assert "output_tokens: 128" in recorded.getvalue()
 assert "finish: length | json_object: True" in recorded.getvalue()
 print("PASS: metrics distinguish length finish from incomplete JSON")
+
+# Evidence extraction gets extra room; short planning and review retain the smaller cap.
+from decision import _stage
+requested = []
+def capture(request):
+    requested.append(request.read().decode())
+    return httpx.Response(200, json={"choices": [{"finish_reason": "stop", "message": {"content": "{}"}}]})
+with patch('decision.httpx.Client', side_effect=lambda **kw: real_client(
+        transport=httpx.MockTransport(capture), **kw)):
+    token = _stage.set("extract_facts")
+    try:
+        LocalModel().generate([{"role": "user", "content": "test"}])
+    finally:
+        _stage.reset(token)
+    LocalModel().generate([{"role": "user", "content": "test"}])
+import json
+assert [json.loads(item)["max_tokens"] for item in requested] == [384, 256]
+print('PASS: extraction has a measured larger cap than short decisions')

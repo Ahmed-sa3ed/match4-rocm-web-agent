@@ -2,9 +2,9 @@
 
 A web retrieval agent that navigates links and GET forms, renders JavaScript with Scrapling, reads tables and PDFs, resolves conflicting evidence, and answers with verified citations. The latest agent workflow uses the **local Qwen model from checkpoint 5** through a resident Transformers server. No ChatGPT login or hosted LLM API is needed.
 
-The model is `Qwen/Qwen3-4B-Instruct-2507` with Transformers 5.20.2, BF16 weights, SDPA attention, deterministic generation. The agent now requests up to 256 output tokens for each structured decision, raised from the checkpoint's 128 after AMD measurements showed incomplete extraction JSON at exactly 128 tokens. The server accepts up to 512 for experiments. The HTTP server keeps the model loaded between CLI queries; the agent's planning, extraction and review prompts are from the newer project.
+The model is `Qwen/Qwen3-4B-Instruct-2507` with Transformers 5.20.2, BF16 weights, SDPA attention, deterministic generation. The agent requests up to 384 output tokens for evidence extraction and 256 for other decisions. AMD measurements showed incomplete extraction JSON at both the checkpoint's 128 and 256 caps; the server accepts up to 512 for experiments. The HTTP server keeps the model loaded between CLI queries; the agent's planning, extraction and review prompts are from the newer project.
 
-> **Validation:** Offline application and local HTTP contract checks pass. A user-run AMD notebook check launched Chromium through Scrapling with `MATCH4_BROWSER_NO_ZYGOTE=1`. Full Qwen accuracy, image build, VRAM usage and the final Match 4 CLI contract still require live validation. The available competition briefs cover Matches 1Ã¢â‚¬â€œ3.
+> **Validation:** Offline application and local HTTP contract checks pass. A user-run AMD notebook check launched Chromium through Scrapling with `MATCH4_BROWSER_NO_ZYGOTE=1`. Full Qwen accuracy, image build, VRAM usage and the final Match 4 CLI contract still require live validation. The available competition briefs cover Matches 1ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“3.
 
 ## Features
 
@@ -146,6 +146,6 @@ The image has not been built on the competition platform. The exact Match 4 inpu
 
 ## Scope
 
-A starting URL is required. Navigation stays on its origin. Browser rendering is bounded to sparse script pages; PDF text must be selectable (no OCR). The CLI imposes a configurable whole-query deadline; direct Python calls and the evaluation suite retain their own execution budget. HTML responses are rejected above 2 MiB after Scrapling returns; PDF parsing rejects responses above 8 MiB. Scrapling currently buffers the response first, so these checks limit parsing and stored evidence, not bytes transferred on the wire. The 256-token model response cap is a measured increase from the checkpoint setting. The client still rejects incomplete responses; live suite results should determine whether further adjustment is useful.
+A starting URL is required. Navigation stays on its origin. Browser rendering is bounded to sparse script pages; PDF text must be selectable (no OCR). The CLI imposes a configurable whole-query deadline; direct Python calls and the evaluation suite retain their own execution budget. HTML responses are rejected above 2 MiB after Scrapling returns; PDF parsing rejects responses above 8 MiB. Scrapling currently buffers the response first, so these checks limit parsing and stored evidence, not bytes transferred on the wire. The extraction cap of 384 and other-stage cap of 256 are measured increases from the checkpoint setting. The client still rejects incomplete responses; live suite results should determine whether further adjustment is useful.
 
 Credentials, downloaded weights, local environments and generated reports are excluded from Git. Dependencies and models retain their upstream licenses.

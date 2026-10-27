@@ -1,9 +1,14 @@
 """Inference through the resident checkpoint Qwen server."""
 import os
+import inspect
+import json
+from contextvars import ContextVar
+from time import perf_counter
 from urllib.parse import urlsplit
 import httpx
 
 DEFAULT_MODEL = "Qwen/Qwen3-4B-Instruct-2507"
+_stage = ContextVar("model_stage", default="unknown")
 
 def base_url():
     url = os.getenv("MODEL_BASE_URL", "http://127.0.0.1:8000/v1").rstrip("/")
@@ -27,6 +32,7 @@ class LocalModel:
         self.url = base_url()
 
     def generate(self, messages):
+        started = perf_counter()
         with httpx.Client(timeout=120, trust_env=False) as client:
             response = client.post(self.url + "/chat/completions", json={
                 "model": self.slug, "messages": messages,
@@ -41,12 +47,27 @@ class LocalModel:
                     f"Local model server returned HTTP {response.status_code}: {detail}"
                 )
             choice = response.json()["choices"][0]
+            content = choice["message"].get("content")
+            usage = response.json().get("usage", {})
+            if os.getenv("MATCH4_MODEL_METRICS") == "1":
+                try:
+                    parsed = isinstance(json.loads(content), dict) if isinstance(content, str) else False
+                except json.JSONDecodeError:
+                    parsed = False
+                print(f"Model call | stage: {_stage.get()} | output_tokens: "
+                      f"{usage.get('completion_tokens', 'unknown')} | finish: "
+                      f"{choice.get('finish_reason')} | json_object: {parsed} | "
+                      f"seconds: {perf_counter() - started:.3f}")
             if choice.get("finish_reason") != "stop":
                 raise ValueError("Local model did not finish its response cleanly.")
-            content = choice["message"].get("content")
             if not isinstance(content, str) or not content.strip():
                 raise ValueError("Local model returned an empty response.")
             return content.strip()
 
 def generate_reply(messages, model, tokenizer=None):
-    return model.generate(messages)
+    stage = inspect.currentframe().f_back.f_code.co_name
+    token = _stage.set(stage)
+    try:
+        return model.generate(messages)
+    finally:
+        _stage.reset(token)

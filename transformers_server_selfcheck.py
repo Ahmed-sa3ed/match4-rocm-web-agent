@@ -14,7 +14,7 @@ class Backend:
     def complete(self, messages, max_tokens):
         assert messages == [{"role": "user", "content": "hello"}]
         assert max_tokens == 128
-        return '{"answer":"12 EUR"}', "stop"
+        return '{"answer":"12 EUR"}', "stop", 12, 8
 
 
 server = ThreadingHTTPServer(("127.0.0.1", 0), handler_for(Backend()))
@@ -92,6 +92,6 @@ backend.tokenizer = Tokenizer()
 backend.model = Generator()
 backend.lock = Lock()
 assert backend.complete([{"role": "user", "content": "hello"}], 128) == (
-    '{"answer":"12 EUR"}', "stop"
+    '{"answer":"12 EUR"}', "stop", 1, 2
 )
 print("PASS: checkpoint chat template and deterministic generation settings")

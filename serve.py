@@ -53,7 +53,8 @@ class ModelBackend:
             eos = self.tokenizer.eos_token_id
             stopped = bool(len(output) and eos is not None and output[-1].item() == eos)
             content = self.tokenizer.decode(output, skip_special_tokens=True).strip()
-            return content, "stop" if stopped or len(output) < max_tokens else "length"
+            finish = "stop" if stopped or len(output) < max_tokens else "length"
+            return content, finish, inputs["input_ids"].shape[-1], len(output)
 
 
 def handler_for(backend):
@@ -86,11 +87,13 @@ def handler_for(backend):
                 request = json.loads(self.rfile.read(length))
                 if request.get("model") != DEFAULT_MODEL or request.get("stream") is True:
                     raise ValueError("Unsupported model or streaming request")
-                content, finish = backend.complete(
+                content, finish, prompt_tokens, completion_tokens = backend.complete(
                     request.get("messages"), request.get("max_tokens", 128)
                 )
                 self.respond(200, {"choices": [{"finish_reason": finish,
-                             "message": {"role": "assistant", "content": content}}]})
+                             "message": {"role": "assistant", "content": content}}],
+                             "usage": {"prompt_tokens": prompt_tokens,
+                                       "completion_tokens": completion_tokens}})
             except (ValueError, TypeError, json.JSONDecodeError) as exc:
                 self.respond(400, {"error": str(exc)})
             except Exception as exc:

@@ -102,6 +102,14 @@ When health identifies `match4-checkpoint5-transformers` and its PID matches the
 !python3 run_agent_suite.py --workers 1
 ```
 
+To measure the 128-token cap before changing it, set this in a Python cell before running selected cases. Each model call adds its stage, output token count, finish reason, JSON-object parse status and elapsed time to that case's report trace; no prompt or model response text is added by this measurement. Restart the model server after pulling the updated `serve.py` so it returns token usage.
+
+```python
+import os
+os.environ["MATCH4_MODEL_METRICS"] = "1"
+!python3 run_agent_suite.py --case w3c_invention --case archives_declaration_dates --case pdf_nist_si_mole --case conflict_w3c_wcag21_date --workers 1
+```
+
 Reports are written to `test_reports/`. A completed suite can contain failures; inspect its per-case traces. Public sites can change or be blocked by notebook networking. Stop the server when finished using `server.terminate()` in a Python cell.
 
 ## Ask a question

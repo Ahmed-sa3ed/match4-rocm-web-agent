@@ -19,7 +19,7 @@ from urllib.parse import urljoin, urlsplit
 
 from agent import run_agent
 from decision import available_models
-from decision import VLLMModel
+from decision import LocalModel
 from text_match import match_span
 
 PROJECT = Path(__file__).resolve().parent
@@ -381,7 +381,7 @@ def main(argv=None):
     if model_slug not in slugs:
         parser.error("Configured model unavailable; run local_agent.py models.")
 
-    model = VLLMModel(model_slug)
+    model = LocalModel(model_slug)
     rows = []
     started_suite = perf_counter()
     with local_fixture_server(any(case["group"] == "local" for case in cases)) as base:

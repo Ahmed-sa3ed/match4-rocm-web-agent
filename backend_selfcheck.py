@@ -1,13 +1,13 @@
 from unittest.mock import patch
 import httpx
-from decision import VLLMModel
+from decision import LocalModel
 
 def test_response(choice, valid):
     transport = httpx.MockTransport(lambda request: httpx.Response(200, json={"choices": [choice]}))
     real_client = httpx.Client
     with patch('decision.httpx.Client', side_effect=lambda **kw: real_client(transport=transport, **kw)):
         try:
-            result = VLLMModel().generate([{"role": "user", "content": "test"}])
+            result = LocalModel().generate([{"role": "user", "content": "test"}])
             assert valid and result == '{"answer":"12 EUR"}'
         except ValueError:
             assert not valid

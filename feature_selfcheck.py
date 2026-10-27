@@ -472,7 +472,7 @@ with patch.object(retrieval, "fetch_scrapling_response", return_value=SimpleName
         status=200, headers={"content-type": "text/html"}, encoding="utf-8",
         url=url, body=response.content)), \
      patch.object(local_agent, "available_models", return_value=[{"slug": "offline"}]), \
-     patch.object(local_agent, "VLLMModel", return_value=Model()), \
+     patch.object(local_agent, "LocalModel", return_value=Model()), \
      patch.object(sys, "argv", ["local_agent.py", "ask", url,
                                 "What is adult admission?", "--model", "offline"]), \
      redirect_stdout(io.StringIO()) as output:

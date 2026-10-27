@@ -1,4 +1,4 @@
-"""Interactive CLI for the local vLLM web retrieval agent."""
+"""Interactive CLI for the local Qwen web retrieval agent."""
 import argparse
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -6,7 +6,7 @@ from pathlib import Path
 from threading import Thread
 
 from decision import available_models
-from decision import VLLMModel
+from decision import LocalModel
 
 PROJECT = Path(__file__).resolve().parent
 
@@ -21,7 +21,7 @@ def _serve_fixtures():
 def main():
     parser = argparse.ArgumentParser(description="Match4 agent, AMD ROCm edition")
     sub = parser.add_subparsers(dest="command", required=True)
-    sub.add_parser("models", help="List models available to the local vLLM server")
+    sub.add_parser("models", help="List models available to the local model server")
     ask = sub.add_parser("ask", help="Answer a question using a website")
     ask.add_argument("url")
     ask.add_argument("question")
@@ -41,8 +41,8 @@ def main():
 
     slugs = {item["slug"] for item in available_models()}
     if args.model not in slugs:
-        parser.error("Model is not in the local vLLM server's available models. Run the models command.")
-    model = VLLMModel(args.model)
+        parser.error("Model is not in the local model server's available models. Run the models command.")
+    model = LocalModel(args.model)
     if args.command == "ask":
         if not 1 <= args.max_pages <= 20:
             parser.error("--max-pages must be from 1 to 20.")

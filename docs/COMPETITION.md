@@ -15,14 +15,14 @@ The public Match 4 details link returned to the event page when checked. The sup
 ## Before graded submission
 
 1. Obtain the official Match 4 invocation/output specification and adapt the boundary if needed.
-2. Build vLLM against the mandated base with a recorded compatible revision; confirm ROCm torch survives installation.
+2. Build the checkpoint Transformers server in the mandated base; confirm ROCm torch survives installation and the model cache fits.
 3. Run real Qwen queries on the evaluation-class GPU, including static HTML, JavaScript and PDF cases.
 4. Measure cold startup, warm-query latency, GPU peak and uncompressed image size. The current code has no hard whole-query deadline.
-5. Record successful package, vLLM and model revisions for reproducibility.
+5. Record the exact PyTorch, Transformers and model revisions for reproducibility.
 6. If the shared registry submission rules apply, publish the tested image and supply its reference through the organizer's submission form. Keep that reference out of this repository.
 
 ## Completed checks
 
-Backend, feature, adaptive, conflict and PDF self-checks passed on development Windows Python 3.12. The 33-case configuration passes a dry run. These checks use mocked inference and retrieval where needed. Docker, AMD kernels, live Chromium and Qwen accuracy remain unverified for this submission copy.
+Backend, feature, adaptive, conflict and PDF self-checks passed on development Windows Python 3.12. The 33-case configuration passes a dry run. These checks use mocked inference and retrieval where needed. The user validated a local Scrapling Chromium render with the notebook no-zygote setting. Docker and live Qwen accuracy with the updated agent remain unverified.
 
-References: [event](https://lablab.ai/ai-hackathons/amd-lablab-ai-academy-challenge), [vLLM installation](https://docs.vllm.ai/en/stable/getting_started/installation/gpu/), and the supplied briefs.
+References: [event](https://lablab.ai/ai-hackathons/amd-lablab-ai-academy-challenge), and the supplied briefs.

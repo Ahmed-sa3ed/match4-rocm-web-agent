@@ -7,7 +7,7 @@ import re
 import sys
 from urllib.parse import urlsplit
 from agent import run_agent
-from decision import VLLMModel, DEFAULT_MODEL
+from decision import LocalModel, DEFAULT_MODEL
 from retrieval_browser import render_page
 
 def main():
@@ -27,7 +27,7 @@ def main():
     if urlsplit(args.url).scheme not in ("http", "https") or not urlsplit(args.url).hostname:
         parser.error("url must be an HTTP(S) URL")
     with redirect_stdout(sys.stderr):
-        result = run_agent(args.query, args.url, VLLMModel(args.model), None,
+        result = run_agent(args.query, args.url, LocalModel(args.model), None,
                            max_pages=args.max_pages,
                            render_page_fn=None if args.static_only else render_page)
     args.output_dir.mkdir(parents=True, exist_ok=True)

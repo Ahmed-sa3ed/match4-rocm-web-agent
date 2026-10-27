@@ -1,4 +1,4 @@
-# Match 4 â€” Grounded Web Retrieval on AMD ROCm
+# Match 4 Grounded Web Retrieval on AMD ROCm
 
 A web information retrieval agent that follows links, searches GET forms, reads tables and PDFs, and returns answers with verified source passages. Built for the AMD AI League's Intelligent Web Information Retrieval track.
 

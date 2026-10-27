@@ -4,7 +4,7 @@ A web retrieval agent that navigates links and GET forms, renders JavaScript wit
 
 The model is `Qwen/Qwen3-4B-Instruct-2507` with Transformers 5.20.2, BF16 weights, SDPA attention, deterministic generation and a 128-token output cap. These match the checkpoint's model configuration. The HTTP server keeps the model loaded between CLI queries; the agent's planning, extraction and review prompts are from the newer project.
 
-> **Validation:** Offline application and local HTTP contract checks pass. A user-run AMD notebook check launched Chromium through Scrapling with `MATCH4_BROWSER_NO_ZYGOTE=1`. Full Qwen accuracy, image build, VRAM usage and the final Match 4 CLI contract still require live validation. The available competition briefs cover Matches 1–3.
+> **Validation:** Offline application and local HTTP contract checks pass. A user-run AMD notebook check launched Chromium through Scrapling with `MATCH4_BROWSER_NO_ZYGOTE=1`. Full Qwen accuracy, image build, VRAM usage and the final Match 4 CLI contract still require live validation. The available competition briefs cover Matches 1â€“3.
 
 ## Features
 
@@ -38,6 +38,8 @@ Check application logic without loading the model:
 !python3 backend_selfcheck.py
 !python3 transformers_server_selfcheck.py
 !python3 app_selfcheck.py
+!python3 process_selfcheck.py
+!python3 budget_selfcheck.py
 !python3 feature_selfcheck.py
 !python3 adaptive_selfcheck.py
 !python3 conflict_selfcheck.py
@@ -121,7 +123,7 @@ After the model server is healthy:
 !python3 local_agent.py ask https://www.iana.org/help/example-domains "Can example.com be registered?" --model Qwen/Qwen3-4B-Instruct-2507
 ```
 
-The first command writes `output/example-domains_output.json`. The second prints the answer and source passages. Answers contain `status`, `answer`, and `citations` with field, value, URL, quote and support mode. PDFs add a page number. Unsupported answers abstain.
+The first command writes `output/example-domains_output.json`. It publishes a valid empty result before starting a supervised worker, then atomically publishes a validated answer. `--deadline-seconds` controls the whole CLI query budget (default 28 seconds, including 0.5 seconds reserved for output); an overrun leaves the valid empty result. The second prints the answer and source passages. Answers contain `status`, `answer`, and `citations` with field, value, URL, quote and support mode. PDFs add a page number. Unsupported answers abstain.
 
 ## Container packaging
 
@@ -144,6 +146,6 @@ The image has not been built on the competition platform. The exact Match 4 inpu
 
 ## Scope
 
-A starting URL is required. Navigation stays on its origin. Browser rendering is bounded to sparse script pages; PDF text must be selectable (no OCR). Page limits do not impose a complete query deadline. The 128-token model response limit follows the checkpoint but may truncate longer JSON decisions from the expanded agent; the client rejects incomplete responses. Full tests will quantify this risk before submission.
+A starting URL is required. Navigation stays on its origin. Browser rendering is bounded to sparse script pages; PDF text must be selectable (no OCR). The CLI imposes a configurable whole-query deadline; direct Python calls and the evaluation suite retain their own execution budget. HTML responses are rejected above 2 MiB after Scrapling returns; PDF parsing rejects responses above 8 MiB. Scrapling currently buffers the response first, so these checks limit parsing and stored evidence, not bytes transferred on the wire. The 128-token model response limit follows the checkpoint but may truncate longer JSON decisions from the expanded agent; the client rejects incomplete responses. Full tests will quantify this risk before submission.
 
 Credentials, downloaded weights, local environments and generated reports are excluded from Git. Dependencies and models retain their upstream licenses.

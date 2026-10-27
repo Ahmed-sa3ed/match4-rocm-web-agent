@@ -4,7 +4,11 @@ import httpx
 from bs4 import BeautifulSoup
 
 from forms import parse_search_forms
+from budget import remaining
 from tables import format_simple_tables
+
+
+MAX_HTML_BYTES = 2 * 1024 * 1024
 
 
 class UnsupportedContentTypeError(ValueError):
@@ -22,7 +26,10 @@ def fetch_page(url: str) -> dict:
         (value for key, value in response.headers.items()
          if key.lower() == "content-type"), ""
     ).lower()
-    if "application/pdf" in content_type or response.body.startswith(b"%PDF-"):
+    is_pdf = "application/pdf" in content_type or response.body.startswith(b"%PDF-")
+    if not is_pdf and len(response.body) > MAX_HTML_BYTES:
+        raise UnsupportedContentTypeError(f"HTML response exceeds {MAX_HTML_BYTES} bytes")
+    if is_pdf:
         from retrieval_pdf import parse_pdf
         return parse_pdf(response.body, str(response.url))
     if "text/html" not in content_type:
@@ -38,7 +45,7 @@ def fetch_scrapling_response(url):
 
     request = httpx.Request("GET", url)
     try:
-        response = Fetcher.get(url, follow_redirects="safe", timeout=10,
+        response = Fetcher.get(url, follow_redirects="safe", timeout=max(0.1, remaining(10)),
                                retries=1, stealthy_headers=False,
                                impersonate=None, verify=True)
     except Exception as exc:

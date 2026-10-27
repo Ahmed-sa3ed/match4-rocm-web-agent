@@ -2,7 +2,8 @@
 import os
 from urllib.parse import urlsplit
 
-from retrieval import UnsupportedContentTypeError, parse_page
+from retrieval import MAX_HTML_BYTES, UnsupportedContentTypeError, parse_page
+from budget import remaining
 
 
 class BrowserRenderError(RuntimeError):
@@ -24,7 +25,7 @@ def render_page(url, static_length):
         try:
             page.wait_for_function(
                 "minimum => document.body && document.body.innerText.length > minimum",
-                arg=static_length + 10, timeout=5000,
+                arg=static_length + 10, timeout=max(100, int(remaining(5) * 1000)),
             )
         except BrowserTimeout:
             pass
@@ -36,7 +37,8 @@ def render_page(url, static_length):
 
     try:
         response = StealthyFetcher.fetch(
-            url, timeout=12000, page_action=wait_for_content, **launch_options,
+            url, timeout=max(100, int(remaining(12) * 1000)),
+            page_action=wait_for_content, **launch_options,
         )
     except Exception as exc:
         raise BrowserRenderError(str(exc)) from exc
@@ -48,5 +50,7 @@ def render_page(url, static_length):
     ).lower()
     if "text/html" not in content_type:
         raise UnsupportedContentTypeError(f"Expected HTML, received: {content_type}")
+    if len(response.body) > MAX_HTML_BYTES:
+        raise UnsupportedContentTypeError(f"Rendered HTML exceeds {MAX_HTML_BYTES} bytes")
     html = response.body.decode(response.encoding or "utf-8", errors="replace")
     return parse_page(html, str(response.url))

@@ -7,6 +7,7 @@ from urllib.parse import urldefrag, urlsplit
 
 import httpx
 
+from budget import remaining
 from evidence import candidate_fields, select_facts
 from forms import build_search_url
 from navigation import choose_link, choose_route
@@ -114,6 +115,7 @@ def fetch_with_retry(url, fetch_page_fn, max_attempts=2):
     """Retry temporary HTTP/network failures; leave other responses alone."""
     for attempt in range(1, max_attempts + 1):
         try:
+            remaining(float("inf"))
             return fetch_page_fn(url)
         except httpx.HTTPError as exc:
             status = (exc.response.status_code
@@ -125,7 +127,7 @@ def fetch_with_retry(url, fetch_page_fn, max_attempts=2):
             print(f"Fetch attempt {attempt}/{max_attempts} | {url} | {reason}")
             if attempt == max_attempts or not temporary:
                 raise
-            sleep(0.25 * attempt)
+            sleep(remaining(0.25 * attempt))
 
 
 def answered_result(required_fields, selected, conflicts=None):

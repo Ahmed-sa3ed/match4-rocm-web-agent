@@ -123,7 +123,16 @@ After the model server is healthy:
 !python3 local_agent.py ask https://www.iana.org/help/example-domains "Can example.com be registered?" --model Qwen/Qwen3-4B-Instruct-2507
 ```
 
-The first command writes `output/example-domains_output.json`. It publishes a valid empty result before starting a supervised worker, then atomically publishes a validated answer. `--deadline-seconds` controls the whole CLI query budget (default 28 seconds, including 0.5 seconds reserved for output); an overrun leaves the valid empty result. The second prints the answer and source passages. Answers contain `status`, `answer`, and `citations` with field, value, URL, quote and support mode. PDFs add a page number. Unsupported answers abstain.
+By default, `local_agent.py ask` prints only the answer (or `No verified answer`); `app.py` prints only the final JSON result. The first command also writes `output/example-domains_output.json`. It publishes a valid empty result before starting a supervised worker, then atomically publishes a validated answer. `--deadline-seconds` controls the whole CLI query budget (default 28 seconds, including 0.5 seconds reserved for output); an overrun leaves the valid empty result. Answers contain `status`, `answer`, and `citations` with field, value, URL, quote and support mode. PDFs add a page number. Unsupported answers abstain.
+
+Add `--audit` to either command to show the retrieval steps, evidence decisions, citations, and model call metrics on standard error while keeping the result on standard output. Save the audit log in a notebook with:
+
+```python
+!python3 app.py --url https://www.iana.org/help/example-domains --query "Can example.com be registered?" --query-id example-domains --audit 2> agent-audit.log
+!python3 local_agent.py ask https://www.iana.org/help/example-domains "Can example.com be registered?" --model Qwen/Qwen3-4B-Instruct-2507 --audit 2> agent-audit.log
+```
+
+The audit log contains decision messages and occasional model response excerpts; it does not contain private model reasoning. Treat logs as potentially sensitive if pages contain private data. The test suite still saves per-case traces in `test_reports/`.
 
 ## Container packaging
 

@@ -1,6 +1,5 @@
 """File-output interface; Match 4's official harness contract is unconfirmed."""
 import argparse
-from contextlib import redirect_stdout
 import json
 import multiprocessing
 import math
@@ -15,6 +14,7 @@ from urllib.parse import urlsplit
 from agent import run_agent
 from budget import set_deadline
 from decision import LocalModel, DEFAULT_MODEL
+from output_mode import agent_output
 from retrieval_browser import render_page
 
 PROJECT = Path(__file__).resolve().parent
@@ -62,6 +62,8 @@ def parser_for_query():
     parser.add_argument("--model", default=DEFAULT_MODEL)
     parser.add_argument("--max-pages", type=int, default=4)
     parser.add_argument("--static-only", action="store_true")
+    parser.add_argument("--audit", action="store_true",
+                        help="Print detailed agent progress and model call metrics to stderr")
     parser.add_argument("--deadline-seconds", type=float, default=28.0,
                         help="Whole-query wall time; leave time for output recovery")
     return parser
@@ -71,7 +73,7 @@ def query_worker(args, deadline, sender):
     """Isolate model, browser and network stalls from the output supervisor."""
     try:
         set_deadline(deadline)
-        with redirect_stdout(sys.stderr):
+        with agent_output(args.audit):
             candidate = run_agent(args.query, args.url, LocalModel(args.model), None,
                                   max_pages=args.max_pages,
                                   render_page_fn=None if args.static_only else render_page)

@@ -7,6 +7,7 @@ from threading import Thread
 
 from decision import available_models
 from decision import LocalModel
+from output_mode import agent_output
 
 PROJECT = Path(__file__).resolve().parent
 
@@ -29,6 +30,8 @@ def main():
                      help="Do not render sparse script-driven pages")
     ask.add_argument("--max-pages", type=int, default=4,
                      help="Maximum successfully fetched pages (1-20; default 4)")
+    ask.add_argument("--audit", action="store_true",
+                     help="Print detailed agent progress and model call metrics to stderr")
     for name in ("ask", "smoke", "checks"):
         command = ask if name == "ask" else sub.add_parser(name)
         command.add_argument("--model", required=True, help="Served model name from the models command")
@@ -48,22 +51,24 @@ def main():
             parser.error("--max-pages must be from 1 to 20.")
         from agent import run_agent
         from retrieval_browser import render_page
-        result = run_agent(args.question, args.url, model, None,
-                           render_page_fn=None if args.static_only else render_page,
-                           max_pages=args.max_pages)
-        print("Answer:" if result["status"] == "answered" else "Abstained:",
-              result["answer"] or result.get("failure_reason", "Insufficient verified evidence."))
-        for number, citation in enumerate(result.get("citations", []), 1):
-            print(f"[{number}] {citation['field']}: {citation['value']}")
-            print(f"    Source: {citation['source_url']}")
-            if "page_number" in citation:
-                print(f"    PDF page: {citation['page_number']}")
-            print(f"    Passage: {citation['quote']}")
-            print(f"    Support: {citation['support_mode']}")
-        for conflict in result.get("conflicts", []):
-            print(f"Conflict for {conflict['field']}: {conflict['status']} â€” {conflict['reason']}")
-            for candidate in conflict["candidates"]:
-                print(f"    {candidate['value']} | {candidate['source_url']}")
+        with agent_output(args.audit):
+            result = run_agent(args.question, args.url, model, None,
+                               render_page_fn=None if args.static_only else render_page,
+                               max_pages=args.max_pages)
+            print("Answer:" if result["status"] == "answered" else "Abstained:",
+                  result["answer"] or result.get("failure_reason", "Insufficient verified evidence."))
+            for number, citation in enumerate(result.get("citations", []), 1):
+                print(f"[{number}] {citation['field']}: {citation['value']}")
+                print(f"    Source: {citation['source_url']}")
+                if "page_number" in citation:
+                    print(f"    PDF page: {citation['page_number']}")
+                print(f"    Passage: {citation['quote']}")
+                print(f"    Support: {citation['support_mode']}")
+            for conflict in result.get("conflicts", []):
+                print(f"Conflict for {conflict['field']}: {conflict['status']} | {conflict['reason']}")
+                for candidate in conflict["candidates"]:
+                    print(f"    {candidate['value']} | {candidate['source_url']}")
+        print(result["answer"] if result["status"] == "answered" else "No verified answer")
         return
 
     server = _serve_fixtures()

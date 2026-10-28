@@ -1,12 +1,14 @@
 """Check the file-output boundary without network or model access."""
 import io
 import json
+import os
 import sys
 import tempfile
 from contextlib import redirect_stdout, redirect_stderr
 from pathlib import Path
 from unittest.mock import patch
 import app
+import local_agent
 
 result = {"status": "answered", "answer": "12 EUR", "citations": [
     {"field": "price", "value": "12 EUR", "source_url": "https://example.org/fees",
@@ -47,12 +49,20 @@ with tempfile.TemporaryDirectory(dir=Path(__file__).parent) as folder:
     output = io.StringIO()
     def complete(*unused, **kwargs):
         assert json.loads((Path(folder)/'demo_output.json').read_text()) == app.EMPTY
+        print('INTERNAL TRACE')
         return result
-    with patch.object(app.multiprocessing, 'get_context', return_value=ImmediateContext()), patch.object(sys, 'argv', args), patch.object(app, 'run_agent', side_effect=complete), redirect_stdout(output):
+    quiet_errors = io.StringIO()
+    with patch.object(app.multiprocessing, 'get_context', return_value=ImmediateContext()), patch.object(sys, 'argv', args), patch.object(app, 'run_agent', side_effect=complete), redirect_stdout(output), redirect_stderr(quiet_errors):
         app.main()
     assert json.loads(output.getvalue()) == result
+    assert 'INTERNAL TRACE' not in quiet_errors.getvalue()
     assert json.loads((Path(folder)/'demo_output.json').read_text()) == result
     assert not list(Path(folder).glob('.demo_output.json*'))
+    audit_output, audit_errors = io.StringIO(), io.StringIO()
+    with patch.object(app.multiprocessing, 'get_context', return_value=ImmediateContext()), patch.object(sys, 'argv', args + ['--audit']), patch.object(app, 'run_agent', side_effect=complete), patch.dict(os.environ, {}, clear=False), redirect_stdout(audit_output), redirect_stderr(audit_errors):
+        app.main()
+    assert json.loads(audit_output.getvalue()) == result
+    assert 'INTERNAL TRACE' in audit_errors.getvalue()
     with patch.object(sys, 'argv', args + ['--query-id', '../escape']), redirect_stderr(io.StringIO()), redirect_stdout(io.StringIO()) as rejected:
         app.main()
     assert json.loads(rejected.getvalue()) == app.EMPTY
@@ -61,4 +71,18 @@ with tempfile.TemporaryDirectory(dir=Path(__file__).parent) as folder:
         app.main()
     assert json.loads(failed.getvalue()) == app.EMPTY
     assert json.loads((Path(folder)/'demo_output.json').read_text()) == app.EMPTY
+
+    ask_args = ['local_agent.py', 'ask', 'https://example.org/', 'Admission?',
+                '--model', 'example-model']
+    def local_complete(*unused, **kwargs):
+        print('INTERNAL TRACE')
+        return result
+    with patch.object(sys, 'argv', ask_args), patch.object(local_agent, 'available_models', return_value=[{'slug': 'example-model'}]), patch.object(local_agent, 'LocalModel', return_value=object()), patch('agent.run_agent', side_effect=local_complete), redirect_stdout(io.StringIO()) as answer, redirect_stderr(io.StringIO()) as errors:
+        local_agent.main()
+    assert answer.getvalue().strip() == '12 EUR'
+    assert errors.getvalue() == ''
+    with patch.object(sys, 'argv', ask_args + ['--audit']), patch.object(local_agent, 'available_models', return_value=[{'slug': 'example-model'}]), patch.object(local_agent, 'LocalModel', return_value=object()), patch('agent.run_agent', side_effect=local_complete), redirect_stdout(io.StringIO()) as answer, redirect_stderr(io.StringIO()) as errors:
+        local_agent.main()
+    assert answer.getvalue().strip() == '12 EUR'
+    assert 'INTERNAL TRACE' in errors.getvalue() and 'Source:' in errors.getvalue()
 print('PASS: CLI publishes an early placeholder, atomically replaces it, and recovers from errors')
